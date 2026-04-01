@@ -199,7 +199,14 @@ export default function Profile() {
           <div className="pageCard" style={{ padding: 24, background: 'rgba(0,0,0,0.01)', border: '1px dashed var(--border)' }}>
             <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 800 }}>Help & Support</h3>
             <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>Need help with an order or listing? Contact our campus support team.</p>
-            <button className="btn btnGhost" style={{ width: '100%', marginTop: 12, fontSize: 12, border: '1px solid var(--border)' }}>Get Help</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+              <Link to="/help" className="btn btnGhost" style={{ width: '100%', fontSize: 12, border: '1px solid var(--border)' }}>
+                Get Help
+              </Link>
+              <Link to="/privacy" className="btn btnGhost" style={{ width: '100%', fontSize: 12, border: '1px solid var(--border)' }}>
+                Privacy Policy
+              </Link>
+            </div>
           </div>
         </div>
 
