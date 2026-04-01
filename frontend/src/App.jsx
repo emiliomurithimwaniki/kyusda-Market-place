@@ -18,6 +18,8 @@ import AuthLogin from './pages/AuthLogin.jsx';
 import AuthRegister from './pages/AuthRegister.jsx';
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import TransactionStatus from './pages/TransactionStatus.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import HelpSupport from './pages/HelpSupport.jsx';
 
 export default function App() {
   const location = useLocation();
@@ -69,6 +71,8 @@ export default function App() {
           <Route path="/login" element={<AuthLogin />} />
           <Route path="/register" element={<AuthRegister />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/help" element={<HelpSupport />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
