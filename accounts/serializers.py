@@ -21,9 +21,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    orders_count = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'phone', 'role', 'created_at']
+        fields = ['id', 'name', 'email', 'phone', 'role', 'created_at', 'orders_count']
+
+    def get_orders_count(self, obj):
+        return obj.orders.count() if hasattr(obj, 'orders') else 0
 
 
 class ProfileSerializer(serializers.ModelSerializer):

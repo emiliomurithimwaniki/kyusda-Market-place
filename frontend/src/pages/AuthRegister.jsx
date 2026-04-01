@@ -10,20 +10,20 @@ export default function AuthRegister() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('buyer');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setIsRegistering(true);
     try {
       await api.register({ name, email, phone, password, role });
       await api.login({ email, password });
       nav('/');
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      setError(err.response?.data?.detail || err.message || 'Registration failed');
     } finally {
-      setLoading(false);
+      setIsRegistering(false);
     }
   }
 
@@ -69,8 +69,8 @@ export default function AuthRegister() {
             <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 10 }}>{error}</div>
           ) : null}
 
-          <button className="btn btnPrimary" type="submit" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Creating...' : 'Register'}
+          <button className="btn btnPrimary" type="submit" style={{ width: '100%' }} disabled={isRegistering}>
+            {isRegistering ? 'Registering...' : 'Register'}
           </button>
 
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--muted)' }}>

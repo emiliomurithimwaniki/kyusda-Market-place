@@ -34,8 +34,19 @@ export default function Dashboard() {
     return () => { alive = false; };
   }, []);
 
-  function boostProduct(product) {
-    alert(`Boost requested for: ${product.title}`);
+  const [boostingId, setBoostingId] = useState(null);
+
+  async function boostProduct(product) {
+    setBoostingId(product.id);
+    try {
+      // await api.boostProduct(product.id);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      alert(`Boost active for: ${product.title}`);
+    } catch (err) {
+      alert('Failed to boost product');
+    } finally {
+      setBoostingId(null);
+    }
   }
 
   return (
@@ -97,8 +108,14 @@ export default function Dashboard() {
                   ) : products.map((p) => (
                     <div key={p.id} style={{ position: 'relative' }}>
                       <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
-                        <button type="button" className="btn btnGhost" style={{ padding: '8px 12px', border: '1px solid var(--border)' }} onClick={() => boostProduct(p)}>
-                          Boost
+                        <button 
+                          type="button" 
+                          className="btn btnGhost" 
+                          style={{ padding: '8px 12px', border: '1px solid var(--border)', minWidth: 80 }} 
+                          onClick={() => boostProduct(p)}
+                          disabled={boostingId === p.id}
+                        >
+                          {boostingId === p.id ? '⌛' : 'Boost'}
                         </button>
                       </div>
                       <ProductCard product={p} />

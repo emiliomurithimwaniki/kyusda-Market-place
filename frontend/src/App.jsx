@@ -10,10 +10,13 @@ import Home from './pages/Home.jsx';
 import Market from './pages/Market.jsx';
 import Messages from './pages/Messages.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
+import EditProduct from './pages/EditProduct.jsx';
 import Profile from './pages/Profile.jsx';
 import SellerProfile from './pages/SellerProfile.jsx';
+import FlashSale from './pages/FlashSale.jsx';
 import AuthLogin from './pages/AuthLogin.jsx';
 import AuthRegister from './pages/AuthRegister.jsx';
+import TransactionStatus from './pages/TransactionStatus.jsx';
 
 export default function App() {
   const location = useLocation();
@@ -52,13 +55,16 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home query={query} category={category} setCategory={setCategory} />} />
           <Route path="/market" element={<Market query={query} showFilters={showFilters} setShowFilters={setShowFilters} />} />
+          <Route path="/flash" element={<FlashSale />} />
           <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/product/:id/edit" element={<EditProduct />} />
           <Route path="/add" element={<AddListing />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/chat/:id" element={<Chat />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<SellerProfile />} />
+          <Route path="/status" element={<TransactionStatus />} />
           <Route path="/login" element={<AuthLogin />} />
           <Route path="/register" element={<AuthRegister />} />
           <Route path="*" element={<Navigate to="/" replace />} />

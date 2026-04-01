@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../lib/api.js';
 
 export default function SellerProfile() {
   const { id } = useParams();
+  const nav = useNavigate();
+  const location = useLocation();
 
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [following, setFollowing] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -25,7 +29,11 @@ export default function SellerProfile() {
         ]);
         if (mounted) {
           setSeller(sellerRes?.data || null);
-          setProducts(productsRes?.data || []);
+          const data = productsRes?.data;
+          const results = Array.isArray(data?.results)
+            ? data.results
+            : (Array.isArray(data) ? data : []);
+          setProducts(results);
         }
       } catch {
         if (mounted) setError('Unable to load data. Please check your internet connection and try again.');
@@ -38,8 +46,65 @@ export default function SellerProfile() {
   }, [id]);
 
   const featuredProducts = useMemo(() => {
-    return (products || []).filter((p) => p?.featured);
+    return (Array.isArray(products) ? products : []).filter((p) => p?.featured);
   }, [products]);
+
+  const followerCount = Number.isFinite(Number(seller?.follower_count)) ? Number(seller.follower_count) : 0;
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('kyusda_following_sellers');
+      const map = raw ? JSON.parse(raw) : {};
+      const isFollowing = Boolean(map && map[String(id)]);
+      setFollowing(isFollowing);
+    } catch {
+      setFollowing(false);
+    }
+  }, [id]);
+
+  const toggleFollow = async () => {
+    if (!seller || toggling) return;
+    const token = window.localStorage.getItem('kyusda_access_token');
+    if (!token) {
+      alert('Please log in to follow a store.');
+      const next = encodeURIComponent(location.pathname + location.search);
+      nav(`/login?next=${next}`);
+      return;
+    }
+    setToggling(true);
+    try {
+      if (following) {
+        await api.unfollowSeller(seller.id);
+        setFollowing(false);
+        setSeller((prev) => prev ? ({ ...prev, follower_count: Math.max(0, Number(prev.follower_count || 0) - 1) }) : prev);
+
+        try {
+          const raw = window.localStorage.getItem('kyusda_following_sellers');
+          const map = raw ? JSON.parse(raw) : {};
+          if (map && typeof map === 'object') {
+            delete map[String(seller.id)];
+            window.localStorage.setItem('kyusda_following_sellers', JSON.stringify(map));
+          }
+        } catch {}
+      } else {
+        await api.followSeller(seller.id);
+        setFollowing(true);
+        setSeller((prev) => prev ? ({ ...prev, follower_count: Number(prev.follower_count || 0) + 1 }) : prev);
+
+        try {
+          const raw = window.localStorage.getItem('kyusda_following_sellers');
+          const map = raw ? JSON.parse(raw) : {};
+          const next = (map && typeof map === 'object') ? map : {};
+          next[String(seller.id)] = true;
+          window.localStorage.setItem('kyusda_following_sellers', JSON.stringify(next));
+        } catch {}
+      }
+    } catch {
+      alert('Unable to update follow status.');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease' }}>
@@ -79,9 +144,12 @@ export default function SellerProfile() {
                 </div>
                 <div style={{ flex: 1, minWidth: 200, paddingBottom: 10 }}>
                   <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.8px', margin: '0 0 4px' }}>{seller.name}</h1>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>Followers: {followerCount}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 12, paddingBottom: 10 }}>
-                  <button className="btn btnPrimary" style={{ padding: '12px 24px' }}>Follow Store</button>
+                  <button className="btn btnPrimary" style={{ padding: '12px 24px' }} onClick={toggleFollow} disabled={toggling}>
+                    {following ? 'Following' : 'Follow Store'}
+                  </button>
                   <Link to="/messages" className="btn btnGhost" style={{ padding: '12px 24px', border: '1px solid var(--border)' }}>
                     Contact
                   </Link>
@@ -104,6 +172,10 @@ export default function SellerProfile() {
                   <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
                     <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--primary)' }}>{featuredProducts.length}</div>
                     <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Featured</div>
+                  </div>
+                  <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.02)', textAlign: 'center', gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--primary)' }}>{followerCount}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Followers</div>
                   </div>
                 </div>
               </div>

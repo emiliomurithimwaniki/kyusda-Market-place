@@ -25,7 +25,7 @@ export default function Profile() {
         }
       } catch {
         try {
-          const hasToken = !!localStorage.getItem('kyusda_token');
+          const hasToken = !!localStorage.getItem('kyusda_access_token') || !!localStorage.getItem('kyusda_refresh_token');
           if (!hasToken) throw new Error('No token');
 
           const { data } = await api.getProfile();
@@ -53,7 +53,9 @@ export default function Profile() {
       setListingsError(null);
       try {
         const res = await api.getProducts({ sellerId: me.id });
-        if (alive) setMyListings(res?.data || []);
+        const payload = res?.data;
+        const results = Array.isArray(payload?.results) ? payload.results : (Array.isArray(payload) ? payload : []);
+        if (alive) setMyListings(results);
       } catch {
         if (alive) {
           setListingsError('Unable to load data. Please check your internet connection and try again.');
@@ -182,7 +184,7 @@ export default function Profile() {
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 800 }}>Account Stats</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)' }}>12</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)' }}>{me?.orders_count || 0}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Orders</div>
               </div>
               <div style={{ padding: 16, borderRadius: 16, background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
@@ -249,7 +251,24 @@ export default function Profile() {
                 ) : myListings.length > 0 ? (
                   <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
                     {myListings.map((p) => (
-                      <ProductCard key={p.id} product={p} />
+                      <div key={p.id} style={{ position: 'relative' }}>
+                        <ProductCard product={p} />
+                        <Link
+                          to={`/product/${p.id}/edit`}
+                          className="btn btnGhost"
+                          style={{
+                            position: 'absolute',
+                            top: 12,
+                            right: 12,
+                            padding: '6px 10px',
+                            fontSize: 12,
+                            border: '1px solid var(--border)',
+                            background: 'rgba(255,255,255,0.9)',
+                          }}
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     ))}
                   </div>
                 ) : (

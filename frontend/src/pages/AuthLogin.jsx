@@ -1,25 +1,30 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api.js';
 
 export default function AuthLogin() {
   const nav = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-async function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setIsLoggingIn(true);
     try {
       await api.login({ email, password });
-      nav('/');
+      
+      // Handle redirect
+      const params = new URLSearchParams(location.search);
+      const redirect = params.get('redirect') || '/';
+      nav(redirect);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Login failed');
     } finally {
-      setLoading(false);
+      setIsLoggingIn(false);
     }
   }
 
@@ -43,8 +48,8 @@ async function submit(e) {
             <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 10 }}>{error}</div>
           ) : null}
 
-          <button className="btn btnPrimary" type="submit" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Signing in...' : 'Login'}
+          <button className="btn btnPrimary" type="submit" style={{ width: '100%' }} disabled={isLoggingIn}>
+            {isLoggingIn ? 'Logging in...' : 'Login'}
           </button>
 
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--muted)' }}>

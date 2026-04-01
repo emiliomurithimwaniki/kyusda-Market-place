@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../lib/api.js';
 
 export default function Home({ query, category, setCategory }) {
+  const nav = useNavigate();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [marketplaceItems, setMarketplaceItems] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [prefetchCache, setPrefetchCache] = useState(null);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -44,11 +49,24 @@ export default function Home({ query, category, setCategory }) {
         } else {
           setPrefetchCache(null);
         }
+
+        try {
+          const marketRes = await api.getProducts({ page: 1, page_size: 12 });
+          if (!mounted) return;
+          const marketPayload = marketRes?.data;
+          const marketResults = Array.isArray(marketPayload?.results)
+            ? marketPayload.results
+            : (Array.isArray(marketPayload) ? marketPayload : []);
+          setMarketplaceItems(marketResults);
+        } catch {
+          if (mounted) setMarketplaceItems([]);
+        }
       } catch {
         if (mounted) {
           setError('Unable to load data. Please check your internet connection and try again.');
           setCategories([]);
           setProducts([]);
+          setMarketplaceItems([]);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -57,6 +75,69 @@ export default function Home({ query, category, setCategory }) {
     load();
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    try {
+      const key = 'kyusda_recently_viewed';
+      const raw = window.localStorage.getItem(key);
+      const list = JSON.parse(raw || '[]');
+      setRecentlyViewed(Array.isArray(list) ? list : []);
+    } catch {
+      setRecentlyViewed([]);
+    }
+  }, []);
+
+  const tokenize = (text) => {
+    return String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+  };
+
+  const scoreForTokens = (p, tokens) => {
+    if (!tokens || tokens.length === 0) return 0;
+    const title = String(p?.title || '').toLowerCase();
+    const desc = String(p?.description || '').toLowerCase();
+    const cat = String(p?.category || p?.category_name || '').toLowerCase();
+
+    let score = 0;
+    for (const t of tokens) {
+      if (!t) continue;
+      if (title.includes(t)) score += 6;
+      if (cat.includes(t)) score += 4;
+      if (desc.includes(t)) score += 2;
+    }
+    if (p?.featured) score += 0.5;
+    return score;
+  };
+
+  useEffect(() => {
+    const viewed = Array.isArray(recentlyViewed) ? recentlyViewed : [];
+    const viewedIds = new Set(viewed.map((x) => String(x?.id)).filter(Boolean));
+
+    const seedText = viewed
+      .slice(0, 5)
+      .map((p) => `${p?.title || ''} ${p?.category || p?.category_name || ''} ${p?.description || ''}`)
+      .join(' ');
+
+    const tokens = tokenize(seedText).slice(0, 25);
+    if (tokens.length === 0) {
+      setRecommendations([]);
+      return;
+    }
+
+    const pool = Array.isArray(marketplaceItems) ? marketplaceItems : [];
+    const ranked = pool
+      .filter((p) => p?.id && !viewedIds.has(String(p.id)))
+      .map((p) => ({ p, score: scoreForTokens(p, tokens) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map((x) => x.p);
+
+    setRecommendations(ranked);
+  }, [recentlyViewed, marketplaceItems]);
 
   async function loadMore() {
     if (loadingMore || loading || !hasMore) return;
@@ -107,7 +188,7 @@ export default function Home({ query, category, setCategory }) {
           <div className="heroArt"></div>
         </div>
         <div className="promoStack">
-          <div className="promoCard">
+          <div className="promoCard" onClick={() => nav('/flash')} style={{ cursor: 'pointer' }}>
             <div>
               <div className="promoTitle">Flash Deals</div>
               <div className="promoHint">Ends in 02:45:12</div>
@@ -177,7 +258,51 @@ export default function Home({ query, category, setCategory }) {
         <div className="sectionHint">Pick up where you left off</div>
       </div>
       <div className="grid">
-        {null}
+        {recentlyViewed.length === 0 ? (
+          <div className="pageCard" style={{ textAlign: 'center', padding: '30px 20px', gridColumn: '1 / -1' }}>
+            <div className="sectionTitle">No history yet</div>
+            <div className="sectionHint">Open a product to see it here.</div>
+          </div>
+        ) : (
+          recentlyViewed.map((p) => <ProductCard key={p.id} product={p} />)
+        )}
+      </div>
+
+      <div className="sectionHeader" style={{ marginTop: 32 }}>
+        <div className="sectionTitle">Marketplace Items</div>
+        <div className="sectionHint">Latest items on the marketplace</div>
+      </div>
+      <div className="grid">
+        {loading ? null : error ? (
+          <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px', gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
+            <div className="sectionTitle">Network Error</div>
+            <div className="sectionHint">Unable to load marketplace items.</div>
+          </div>
+        ) : marketplaceItems.length === 0 ? (
+          <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px', gridColumn: '1 / -1' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🗂️</div>
+            <div className="sectionTitle">No information</div>
+            <div className="sectionHint">There are no products to show on this page.</div>
+          </div>
+        ) : (
+          marketplaceItems.map((p) => <ProductCard key={p.id} product={p} />)
+        )}
+      </div>
+
+      <div className="sectionHeader" style={{ marginTop: 32 }}>
+        <div className="sectionTitle">You may like</div>
+        <div className="sectionHint">Based on items you viewed recently</div>
+      </div>
+      <div className="grid">
+        {recommendations.length === 0 ? (
+          <div className="pageCard" style={{ textAlign: 'center', padding: '30px 20px', gridColumn: '1 / -1' }}>
+            <div className="sectionTitle">No recommendations yet</div>
+            <div className="sectionHint">View a few products to get personalized suggestions.</div>
+          </div>
+        ) : (
+          recommendations.map((p) => <ProductCard key={p.id} product={p} />)
+        )}
       </div>
     </div>
   );

@@ -60,3 +60,14 @@ class Profile(models.Model):
     image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=255, blank=True)
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='following')
+    seller = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='followers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['follower', 'seller'], name='unique_follow_pair')
+        ]

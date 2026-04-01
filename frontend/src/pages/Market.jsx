@@ -8,6 +8,7 @@ export default function Market({ query, showFilters, setShowFilters }) {
   const [location, setLocation] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [products, setProducts] = useState([]);
+  const [activeSection, setActiveSection] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
@@ -15,13 +16,43 @@ export default function Market({ query, showFilters, setShowFilters }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [prefetchCache, setPrefetchCache] = useState(null);
 
+  const tokenize = (text) => {
+    return String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+  };
+
+  const scoreProductForQuery = (p, qTokens) => {
+    if (!qTokens || qTokens.length === 0) return 0;
+    const title = String(p?.title || '').toLowerCase();
+    const desc = String(p?.description || '').toLowerCase();
+    const cat = String(p?.category || p?.category_name || '').toLowerCase();
+    const loc = String(p?.location || '').toLowerCase();
+
+    let score = 0;
+    for (const t of qTokens) {
+      if (!t) continue;
+      if (title.includes(t)) score += 6;
+      if (cat.includes(t)) score += 4;
+      if (desc.includes(t)) score += 2;
+      if (loc.includes(t)) score += 1;
+    }
+
+    // Small boost for featured when relevance ties
+    if (p?.featured) score += 0.5;
+    return score;
+  };
+
   useEffect(() => {
     let mounted = true;
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.getProducts({ page: 1, page_size: 20 });
+        const params = activeSection === 'flash' ? { flash_sale: true, page: 1, page_size: 20 } : { page: 1, page_size: 20 };
+        const res = await api.getProducts(params);
         if (!mounted) return;
         const payload = res?.data;
         const results = Array.isArray(payload?.results) ? payload.results : (payload || []);
@@ -31,7 +62,8 @@ export default function Market({ query, showFilters, setShowFilters }) {
 
         if (payload?.next) {
           try {
-            const nextRes = await api.getProducts({ page: 2, page_size: 20 });
+            const nextParams = activeSection === 'flash' ? { flash_sale: true, page: 2, page_size: 20 } : { page: 2, page_size: 20 };
+            const nextRes = await api.getProducts(nextParams);
             if (!mounted) return;
             const nextPayload = nextRes?.data;
             const nextResults = Array.isArray(nextPayload?.results) ? nextPayload.results : null;
@@ -53,7 +85,7 @@ export default function Market({ query, showFilters, setShowFilters }) {
     }
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [activeSection]);
 
   async function loadMore() {
     if (loadingMore || loading || !hasMore) return;
@@ -80,7 +112,8 @@ export default function Market({ query, showFilters, setShowFilters }) {
         return;
       }
 
-      const res = await api.getProducts({ page: nextPage, page_size: 20 });
+      const params = activeSection === 'flash' ? { flash_sale: true, page: nextPage, page_size: 20 } : { page: nextPage, page_size: 20 };
+      const res = await api.getProducts(params);
       const payload = res?.data;
       const results = Array.isArray(payload?.results) ? payload.results : (payload || []);
       setProducts((prev) => [...prev, ...results]);
@@ -107,14 +140,31 @@ export default function Market({ query, showFilters, setShowFilters }) {
   }
 
   const filtered = useMemo(() => {
-    const q = (query || '').toLowerCase();
+    const q = (query || '').trim().toLowerCase();
+    const qTokens = tokenize(q);
+
     let results = (products || []).filter((p) => {
-      if (q && !(p?.title || '').toLowerCase().includes(q)) return false;
+      if (qTokens.length > 0) {
+        const score = scoreProductForQuery(p, qTokens);
+        if (score <= 0) return false;
+      }
       if (location && !String(p?.location || '').toLowerCase().includes(location.toLowerCase())) return false;
       if (minPrice && Number(p.price) < Number(minPrice)) return false;
       if (maxPrice && Number(p.price) > Number(maxPrice)) return false;
       return true;
     });
+
+    if (qTokens.length > 0) {
+      results = results
+        .map((p) => ({ p, score: scoreProductForQuery(p, qTokens) }))
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          const ea = a.p?.offer_end ? new Date(a.p.offer_end).getTime() : Number.MAX_SAFE_INTEGER;
+          const eb = b.p?.offer_end ? new Date(b.p.offer_end).getTime() : Number.MAX_SAFE_INTEGER;
+          return ea - eb;
+        })
+        .map((x) => x.p);
+    }
 
     if (sortBy === 'price-low') results.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-high') results.sort((a, b) => b.price - a.price);
@@ -125,6 +175,24 @@ export default function Market({ query, showFilters, setShowFilters }) {
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', position: 'relative' }}>
+      <div className="pageCard" style={{ padding: 8, marginBottom: 16 }}>
+        <div className="pillRow" style={{ gap: 8, padding: 0 }}>
+          <button
+            className={`tabBtn ${activeSection === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveSection('all')}
+            style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: activeSection === 'all' ? 'var(--primary)' : 'transparent', color: activeSection === 'all' ? 'white' : 'var(--muted)', fontWeight: 700, cursor: 'pointer' }}
+          >
+            All Items
+          </button>
+          <button
+            className={`tabBtn ${activeSection === 'flash' ? 'active' : ''}`}
+            onClick={() => setActiveSection('flash')}
+            style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: activeSection === 'flash' ? 'var(--primary)' : 'transparent', color: activeSection === 'flash' ? 'white' : 'var(--muted)', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Flash Sale
+          </button>
+        </div>
+      </div>
       {/* Filters Popover */}
       {showFilters && (
         <div className="marketFiltersPopover">
@@ -193,7 +261,7 @@ export default function Market({ query, showFilters, setShowFilters }) {
           ) : filtered.length > 0 ? (
             <div className="grid">
               {filtered.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} showOffer={activeSection === 'flash'} />
               ))}
             </div>
           ) : (

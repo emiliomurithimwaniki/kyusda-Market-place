@@ -1,9 +1,30 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { IconPlus, IconSearch } from './Icons.jsx';
+import { api } from '../lib/api.js';
 
 export default function TopBar({ query, setQuery, showFilters, setShowFilters }) {
   const location = useLocation();
+  const nav = useNavigate();
   const isMarketplace = location.pathname === '/market';
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    const fetchCount = async () => {
+      try {
+        const res = await api.getUnreadCount();
+        setUnreadCount(res.data.unread_count || 0);
+      } catch (err) {
+        // Silently ignore or set 0 if not logged in
+        setUnreadCount(0);
+      }
+    };
+
+    fetchCount();
+    interval = setInterval(fetchCount, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, [location.pathname]);
 
   return (
     <header className="topBar">
@@ -41,12 +62,34 @@ export default function TopBar({ query, setQuery, showFilters, setShowFilters })
       </div>
 
       <div className="topBarActions" style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 140, justifyContent: 'flex-end' }}>
-        <div className="iconBtn" title="Notifications">
+        <div 
+          className="iconBtn" 
+          title="Messages" 
+          onClick={() => nav('/messages')}
+          style={{ cursor: 'pointer', position: 'relative' }}
+        >
           <span style={{ fontSize: 18 }}>🔔</span>
-          <div style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', border: '2px solid white' }}></div>
-        </div>
-        <div className="iconBtn" title="Cart">
-          <span style={{ fontSize: 18 }}>🛒</span>
+          {unreadCount > 0 && (
+            <div style={{ 
+              position: 'absolute', 
+              top: -4, 
+              right: -4, 
+              minWidth: 18, 
+              height: 18, 
+              background: 'var(--danger)', 
+              borderRadius: 10, 
+              border: '2px solid white',
+              color: 'white',
+              fontSize: 10,
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px'
+            }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </div>
+          )}
         </div>
         <Link to="/profile" style={{ width: 40, height: 40, borderRadius: 14, background: 'var(--border)', overflow: 'hidden', cursor: 'pointer', border: '2px solid transparent', transition: 'border-color 0.2s' }} className="hover-ring avatarWrapper">
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, background: 'linear-gradient(135deg, #e0e7ff, #ede9fe)' }}>👤</div>
