@@ -26,9 +26,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,emilio123.pythonanywhere.com', cast=Csv())
 if DEBUG:
-    ALLOWED_HOSTS += ['0.0.0.0', '*']
+    ALLOWED_HOSTS += ['0.0.0.0', '*', 'emilio123.pythonanywhere.com']
+else:
+    ALLOWED_HOSTS += ['emilio123.pythonanywhere.com']
 
 
 # Application definition
