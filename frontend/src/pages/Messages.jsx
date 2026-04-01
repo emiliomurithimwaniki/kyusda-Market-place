@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import Skeleton from '../components/Skeleton.jsx';
 
 export default function Messages() {
   const location = useLocation();
@@ -51,10 +52,36 @@ export default function Messages() {
       </div>
 
       {loading ? (
-        <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⌛</div>
-          <div className="sectionTitle">Loading...</div>
-          <div className="sectionHint">Fetching your chats</div>
+        <div className="pageCard" style={{ padding: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 12px',
+                  border: '1px solid var(--border)',
+                  background: 'white',
+                  borderRadius: 16,
+                  marginBottom: 10,
+                }}
+              >
+                <Skeleton width={44} height={44} radius={16} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <Skeleton width={140} height={12} radius={10} />
+                    <Skeleton width={44} height={10} radius={10} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 8 }}>
+                    <Skeleton width="80%" height={10} radius={10} />
+                    <Skeleton width={10} height={10} radius={999} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
         <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>

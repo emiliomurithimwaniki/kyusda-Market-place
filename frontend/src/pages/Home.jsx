@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
+import Skeleton from '../components/Skeleton.jsx';
+import ProductCardSkeleton from '../components/skeletons/ProductCardSkeleton.jsx';
 import { api } from '../lib/api.js';
 
 export default function Home({ query, category, setCategory }) {
@@ -210,16 +212,25 @@ export default function Home({ query, category, setCategory }) {
         <div className="sectionHint">Explore our collections</div>
       </div>
       <div className="categoryGrid">
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            className={`catTile ${category === cat.name ? 'pillActive' : ''}`}
-            onClick={() => setCategory(cat.name)}
-          >
-            <div className="catIcon" style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontSize: 20 }}></div>
-            <div style={{ fontWeight: 600 }}>{cat.name}</div>
-          </button>
-        ))}
+        {loading
+          ? Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="catTile" style={{ pointerEvents: 'none' }}>
+                <div className="catIcon" style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                  <Skeleton width={26} height={26} radius={10} />
+                </div>
+                <Skeleton width="70%" height={10} radius={8} style={{ margin: '6px auto 0' }} />
+              </div>
+            ))
+          : categories.map((cat) => (
+              <button
+                key={cat.id}
+                className={`catTile ${category === cat.name ? 'pillActive' : ''}`}
+                onClick={() => setCategory(cat.name)}
+              >
+                <div className="catIcon" style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontSize: 20 }}></div>
+                <div style={{ fontWeight: 600 }}>{cat.name}</div>
+              </button>
+            ))}
       </div>
 
       {/* Products Grid */}
@@ -228,7 +239,9 @@ export default function Home({ query, category, setCategory }) {
         <div className="sectionHint">Handpicked for you</div>
       </div>
       <div className="grid">
-        {loading ? null : error ? (
+        {loading ? (
+          Array.from({ length: 8 }).map((_, idx) => <ProductCardSkeleton key={idx} />)
+        ) : error ? (
           <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px', gridColumn: '1 / -1' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
             <div className="sectionTitle">Network Error</div>
@@ -273,7 +286,9 @@ export default function Home({ query, category, setCategory }) {
         <div className="sectionHint">Latest items on the marketplace</div>
       </div>
       <div className="grid">
-        {loading ? null : error ? (
+        {loading ? (
+          Array.from({ length: 8 }).map((_, idx) => <ProductCardSkeleton key={idx} />)
+        ) : error ? (
           <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px', gridColumn: '1 / -1' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
             <div className="sectionTitle">Network Error</div>

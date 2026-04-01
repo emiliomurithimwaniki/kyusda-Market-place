@@ -114,6 +114,18 @@
      padding-left: 12px;
      padding-right: 12px;
    }
+
+   .authWrap {
+     min-height: 100svh;
+     place-items: start center;
+     padding-top: 28px;
+     padding-bottom: 28px;
+   }
+
+   .veCard {
+     max-height: calc(100svh - 56px);
+     overflow: auto;
+   }
  }
  
  .topBar {
@@ -588,7 +600,233 @@
    min-height: calc(100svh - 92px);
    display: grid;
    place-items: center;
-   padding: 28px 0;
+   padding: 18px;
+ }
+
+ .veCard {
+   animation: veFadeUp 320ms ease both;
+   width: 100%;
+   margin-left: auto;
+   margin-right: auto;
+   transform: translateY(14px);
+ }
+
+ .veHeader {
+   display: flex;
+   align-items: flex-start;
+   justify-content: space-between;
+   gap: 12px;
+   margin-bottom: 14px;
+ }
+
+ .vePulseDot {
+   width: 10px;
+   height: 10px;
+   border-radius: 999px;
+   background: rgba(107, 114, 128, 0.35);
+   box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.0);
+   transform: translateY(6px);
+ }
+
+ .vePulseDot.on {
+   background: rgba(79, 70, 229, 0.92);
+   animation: vePulse 1.2s ease-in-out infinite;
+ }
+
+ .veForm {
+   margin-top: 10px;
+ }
+
+ .veCodeInput {
+   font-weight: 900;
+   letter-spacing: 0.35em;
+   text-align: center;
+ }
+
+ .veInputError {
+   border-color: rgba(239, 68, 68, 0.45) !important;
+   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+ }
+
+ .veCodeHint {
+   margin-top: 6px;
+   font-size: 12px;
+   color: var(--muted);
+ }
+
+ .veMessage {
+   font-size: 13px;
+   margin: 10px 0 12px;
+   padding: 10px 12px;
+   border-radius: 14px;
+   border: 1px solid var(--border);
+   background: rgba(255, 255, 255, 0.66);
+ }
+
+ .veMessage.success {
+   border-color: rgba(22, 163, 74, 0.25);
+   background: rgba(22, 163, 74, 0.08);
+   color: var(--success);
+ }
+
+ .veMessage.error {
+   border-color: rgba(239, 68, 68, 0.25);
+   background: rgba(239, 68, 68, 0.08);
+   color: var(--danger);
+ }
+
+ .veMessage.info {
+   border-color: rgba(79, 70, 229, 0.20);
+   background: rgba(79, 70, 229, 0.08);
+   color: var(--primary);
+ }
+
+ .veBtnRow {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 10px;
+ }
+
+ .veSpinner {
+   width: 16px;
+   height: 16px;
+   border-radius: 999px;
+   border: 2px solid rgba(255, 255, 255, 0.55);
+   border-top-color: rgba(255, 255, 255, 1);
+   animation: veSpin 800ms linear infinite;
+ }
+
+ .btn:not(.btnPrimary) .veSpinner {
+   border-color: rgba(107, 114, 128, 0.25);
+   border-top-color: rgba(79, 70, 229, 0.9);
+ }
+
+ .veStatus {
+   display: grid;
+   grid-template-columns: 56px 1fr;
+   gap: 12px;
+   align-items: center;
+   padding: 12px;
+   border-radius: 16px;
+   border: 1px solid var(--border);
+   background: rgba(255, 255, 255, 0.62);
+   margin-bottom: 10px;
+   animation: veFadeUp 320ms ease both;
+ }
+
+ .veStatus.ok {
+   border-color: rgba(22, 163, 74, 0.18);
+   background: rgba(22, 163, 74, 0.06);
+ }
+
+ .veStatus.bad {
+   border-color: rgba(239, 68, 68, 0.18);
+   background: rgba(239, 68, 68, 0.06);
+ }
+
+ .veIcon {
+   width: 56px;
+   height: 56px;
+   border-radius: 18px;
+   display: grid;
+   place-items: center;
+   background: rgba(255, 255, 255, 0.7);
+   border: 1px solid rgba(17, 24, 39, 0.06);
+   box-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
+ }
+
+ .veSvg {
+   width: 38px;
+   height: 38px;
+ }
+
+ .veCircle {
+   fill: none;
+   stroke-width: 5;
+   stroke-linecap: round;
+   stroke-dasharray: 160;
+   stroke-dashoffset: 160;
+   animation: veDraw 520ms ease forwards;
+ }
+
+ .veStatus.ok .veCircle {
+   stroke: rgba(22, 163, 74, 0.95);
+ }
+
+ .veStatus.bad .veCircle {
+   stroke: rgba(239, 68, 68, 0.95);
+ }
+
+ .veCheck,
+ .veX {
+   fill: none;
+   stroke-width: 6;
+   stroke-linecap: round;
+   stroke-linejoin: round;
+   stroke-dasharray: 60;
+   stroke-dashoffset: 60;
+   animation: veDraw 380ms 420ms ease forwards;
+ }
+
+ .veStatus.ok .veCheck {
+   stroke: rgba(22, 163, 74, 0.95);
+ }
+
+ .veStatus.bad .veX {
+   stroke: rgba(239, 68, 68, 0.95);
+ }
+
+ .veStatusTitle {
+   font-weight: 900;
+   letter-spacing: -0.4px;
+ }
+
+ .veStatusSub {
+   color: var(--muted);
+   font-size: 12.5px;
+   margin-top: 2px;
+ }
+
+ .veFooterRow {
+   margin-top: 10px;
+   display: flex;
+   gap: 10px;
+ }
+
+ @keyframes veSpin {
+   to {
+     transform: rotate(360deg);
+   }
+ }
+
+ @keyframes vePulse {
+   0% {
+     box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.25);
+   }
+   70% {
+     box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+   }
+   100% {
+     box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+   }
+ }
+
+ @keyframes veFadeUp {
+   from {
+     opacity: 0;
+     transform: translateY(8px);
+   }
+   to {
+     opacity: 1;
+     transform: translateY(0);
+   }
+ }
+
+ @keyframes veDraw {
+   to {
+     stroke-dashoffset: 0;
+   }
  }
  
  .field {

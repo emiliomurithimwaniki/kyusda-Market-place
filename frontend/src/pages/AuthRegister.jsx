@@ -11,15 +11,19 @@ export default function AuthRegister() {
   const [role, setRole] = useState('buyer');
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [pendingVerify, setPendingVerify] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsRegistering(true);
     try {
       await api.register({ name, email, phone, password, role });
-      await api.login({ email, password });
-      nav('/');
+      setPendingVerify(true);
+      setSuccess('We sent a verification code to your email. Enter the code to create your account.');
+      nav(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Registration failed');
     } finally {
@@ -69,8 +73,12 @@ export default function AuthRegister() {
             <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 10 }}>{error}</div>
           ) : null}
 
+          {success ? (
+            <div style={{ color: 'var(--success)', fontSize: 13, marginBottom: 10 }}>{success}</div>
+          ) : null}
+
           <button className="btn btnPrimary" type="submit" style={{ width: '100%' }} disabled={isRegistering}>
-            {isRegistering ? 'Registering...' : 'Register'}
+            {isRegistering ? 'Registering...' : pendingVerify ? 'Verify email' : 'Register'}
           </button>
 
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--muted)' }}>

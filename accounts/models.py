@@ -43,6 +43,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.BUYER)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    is_email_verified = models.BooleanField(default=False)
+    email_verified_at = models.DateTimeField(blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -71,3 +74,14 @@ class Follow(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['follower', 'seller'], name='unique_follow_pair')
         ]
+
+
+class PendingRegistration(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=32, unique=True)
+    role = models.CharField(max_length=20, choices=User.Role.choices, default=User.Role.BUYER)
+    password_hash = models.CharField(max_length=128)
+    verification_code_hash = models.CharField(max_length=128, blank=True)
+    verification_code_expires_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)

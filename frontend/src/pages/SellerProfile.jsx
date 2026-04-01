@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
+import Skeleton from '../components/Skeleton.jsx';
+import ProductCardSkeleton from '../components/skeletons/ProductCardSkeleton.jsx';
 import { api } from '../lib/api.js';
 
 export default function SellerProfile() {
@@ -108,7 +110,32 @@ export default function SellerProfile() {
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-      {loading ? null : error ? (
+      {loading ? (
+        <div>
+          <div className="pageCard" style={{ padding: 0, overflow: 'hidden', marginBottom: 32 }}>
+            <Skeleton height={160} radius={0} />
+            <div style={{ padding: '0 32px 32px', marginTop: -40, position: 'relative' }}>
+              <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <Skeleton width={100} height={100} radius={28} />
+                <div style={{ flex: 1, minWidth: 200, paddingBottom: 10 }}>
+                  <Skeleton width={220} height={20} radius={10} style={{ marginBottom: 8 }} />
+                  <Skeleton width={140} height={12} radius={10} />
+                </div>
+                <div style={{ display: 'flex', gap: 12, paddingBottom: 10 }}>
+                  <Skeleton width={120} height={44} radius={16} />
+                  <Skeleton width={120} height={44} radius={16} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <ProductCardSkeleton key={idx} />
+            ))}
+          </div>
+        </div>
+      ) : error ? (
         <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
           <div className="sectionTitle">Network Error</div>

@@ -16,6 +16,7 @@ import SellerProfile from './pages/SellerProfile.jsx';
 import FlashSale from './pages/FlashSale.jsx';
 import AuthLogin from './pages/AuthLogin.jsx';
 import AuthRegister from './pages/AuthRegister.jsx';
+import VerifyEmail from './pages/VerifyEmail.jsx';
 import TransactionStatus from './pages/TransactionStatus.jsx';
 
 export default function App() {
@@ -36,7 +37,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const hideChrome = location.pathname === '/login' || location.pathname === '/register';
+  const hideChrome = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/verify-email';
 
   return (
     <div className="appShell">
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/status" element={<TransactionStatus />} />
           <Route path="/login" element={<AuthLogin />} />
           <Route path="/register" element={<AuthRegister />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 

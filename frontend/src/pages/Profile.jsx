@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import ProductCard from '../components/ProductCard.jsx';
+import ProfileSkeleton from '../components/skeletons/ProfileSkeleton.jsx';
 
 export default function Profile() {
   const nav = useNavigate();
@@ -101,12 +102,7 @@ export default function Profile() {
   }
 
   if (loading) {
-    return (
-      <div className="pageCard" style={{ animation: 'fadeIn 0.5s ease' }}>
-        <div className="sectionTitle">Profile</div>
-        <div className="sectionHint">Loading your account details...</div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!me) {

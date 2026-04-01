@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatKES } from '../lib/format.js';
 import ProductCard from '../components/ProductCard.jsx';
+import ProductDetailsSkeleton from '../components/skeletons/ProductDetailsSkeleton.jsx';
 import { api } from '../lib/api.js';
 
 export default function ProductDetails() {
@@ -141,7 +142,9 @@ export default function ProductDetails() {
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-      {loading ? null : error ? (
+      {loading ? (
+        <ProductDetailsSkeleton />
+      ) : error ? (
         <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
           <div className="sectionTitle">Network Error</div>

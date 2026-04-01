@@ -56,6 +56,8 @@ export const api = {
   setToken,
   clearToken,
   register: (payload) => apiClient.post('/api/accounts/register/', payload),
+  verifyEmail: (payload) => apiClient.post('/api/accounts/verify-email/', payload),
+  resendVerificationEmail: (payload) => apiClient.post('/api/accounts/verify-email/resend/', payload),
   login: async (payload) => {
     const { data } = await apiClient.post('/api/accounts/login/', payload);
     if (data?.access) setToken(data.access, data.refresh);

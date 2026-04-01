@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import ProductCard from '../components/ProductCard.jsx';
+import ProductCardSkeleton from '../components/skeletons/ProductCardSkeleton.jsx';
 import { api } from '../lib/api.js';
 
 export default function Market({ query, showFilters, setShowFilters }) {
@@ -252,7 +253,11 @@ export default function Market({ query, showFilters, setShowFilters }) {
             </div>
           </div>
 
-          {loading ? null : error ? (
+          {loading ? (
+            <div className="grid">
+              {Array.from({ length: 12 }).map((_, idx) => <ProductCardSkeleton key={idx} />)}
+            </div>
+          ) : error ? (
             <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📶</div>
               <div className="sectionTitle">Network Error</div>

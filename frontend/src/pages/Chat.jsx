@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import Skeleton from '../components/Skeleton.jsx';
 
 export default function Chat() {
   const { id } = useParams();
@@ -106,13 +107,25 @@ export default function Chat() {
     <div style={{ animation: 'fadeIn 0.5s ease', height: 'calc(100svh - 140px)', display: 'flex', flexDirection: 'column' }}>
       {/* Chat Header */}
       <div className="pageCard" style={{ padding: '12px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: 'white', fontWeight: 900 }}>
-          {seller?.name ? seller.name.charAt(0).toUpperCase() : '👤'}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 800, fontSize: 15 }}>{seller?.name || 'Chat'}</div>
-          {seller?.role && <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'capitalize' }}>{seller.role}</div>}
-        </div>
+        {loading ? (
+          <>
+            <Skeleton width={40} height={40} radius={12} />
+            <div style={{ flex: 1 }}>
+              <Skeleton width={160} height={12} radius={10} style={{ marginBottom: 8 }} />
+              <Skeleton width={90} height={10} radius={10} />
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: 'white', fontWeight: 900 }}>
+              {seller?.name ? seller.name.charAt(0).toUpperCase() : '👤'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>{seller?.name || 'Chat'}</div>
+              {seller?.role && <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'capitalize' }}>{seller.role}</div>}
+            </div>
+          </>
+        )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="iconBtn" style={{ width: 36, height: 36 }}>📞</button>
           <button className="iconBtn" style={{ width: 36, height: 36 }}>⋮</button>
@@ -121,6 +134,21 @@ export default function Chat() {
 
       {/* Chat Messages */}
       <div className="chatMessages" style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
+        {loading ? (
+          <>
+            <div className="pageCard" style={{ padding: 16, borderRadius: 20 }}>
+              <Skeleton width={120} height={10} radius={10} style={{ marginBottom: 10 }} />
+              <Skeleton width="100%" height={12} radius={10} style={{ marginBottom: 8 }} />
+              <Skeleton width="85%" height={12} radius={10} />
+            </div>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} style={{ alignSelf: idx % 2 === 0 ? 'flex-start' : 'flex-end', width: 'min(80%, 420px)' }}>
+                <Skeleton height={42} radius={16} />
+              </div>
+            ))}
+          </>
+        ) : null}
+
         {product && (
           <div className="pageCard" style={{ padding: 16, marginBottom: 12, border: '1px solid var(--primary-light)', background: 'linear-gradient(to bottom, #fff, var(--primary-light-alpha))', borderRadius: 20 }}>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>

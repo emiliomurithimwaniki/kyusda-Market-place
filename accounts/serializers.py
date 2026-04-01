@@ -1,23 +1,21 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from accounts.models import Profile
 
 User = get_user_model()
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=32)
     password = serializers.CharField(write_only=True, min_length=8)
-
-    class Meta:
-        model = User
-        fields = ['id', 'name', 'email', 'phone', 'password', 'role']
+    role = serializers.ChoiceField(choices=User.Role.choices, required=False)
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User.objects.create_user(password=password, **validated_data)
-        Profile.objects.create(user=user)
-        return user
+        raise NotImplementedError()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,3 +35,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['id', 'user', 'image', 'bio', 'location']
+
+
+class EmailVerifiedTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if not getattr(self.user, 'is_email_verified', False):
+            raise serializers.ValidationError({'detail': 'Please verify your email before logging in.'})
+        return data
