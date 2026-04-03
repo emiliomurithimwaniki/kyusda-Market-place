@@ -14,6 +14,10 @@ export default function Profile() {
   const [myListings, setMyListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [listingsError, setListingsError] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
 
   useEffect(() => {
     let alive = true;
@@ -69,6 +73,35 @@ export default function Profile() {
     return () => { alive = false; };
   }, [me?.id]);
 
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!me?.id) return;
+      if (activeTab !== 'orders') return;
+      setOrdersLoading(true);
+      setOrdersError(null);
+      try {
+        const res = await api.getOrders();
+        const list = Array.isArray(res?.data) ? res.data : (res?.data?.results || []);
+        const mine = list.filter((o) => String(o?.user) === String(me?.id));
+        if (alive) setOrders(mine);
+      } catch {
+        if (alive) {
+          setOrdersError('Unable to load orders.');
+          setOrders([]);
+        }
+      } finally {
+        if (alive) setOrdersLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [me?.id, activeTab]);
+
+  const filteredOrders = orders.filter((o) => {
+    if (orderStatusFilter === 'all') return true;
+    return String(o?.status) === String(orderStatusFilter);
+  });
+
   const handleSaveSettings = async () => {
     setLoadingSaving(true);
     try {
@@ -84,8 +117,14 @@ export default function Profile() {
         }
       }
 
-      const updated = await api.updateProfile(editData);
-      const next = { ...me, ...updated };
+      const res = await api.updateProfile(editData);
+      const updatedProfile = res?.data;
+      const updatedUser = updatedProfile?.user || {};
+      const next = {
+        ...me,
+        name: updatedProfile?.name ?? updatedUser?.name ?? me?.name,
+        phone: updatedProfile?.phone ?? updatedUser?.phone ?? me?.phone,
+      };
       setMe(next);
       setEditData({ name: next.name || '', phone: next.phone || '' });
       alert('Profile updated successfully!');
@@ -211,8 +250,8 @@ export default function Profile() {
         </div>
 
         {/* Right: Tabs Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div className="pageCard" style={{ padding: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%', minWidth: 0 }}>
+          <div className="pageCard" style={{ padding: '8px', width: '100%' }}>
             <div className="pillRow" style={{ gap: 8, padding: 0 }}>
               <button 
                 className={`tabBtn ${activeTab === 'listings' ? 'active' : ''}`}
@@ -238,7 +277,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div style={{ minHeight: 400 }}>
+          <div style={{ minHeight: 400, width: '100%', minWidth: 0 }}>
             {activeTab === 'listings' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <div className="sectionHeader" style={{ marginTop: 0 }}>
@@ -287,14 +326,96 @@ export default function Profile() {
             {activeTab === 'orders' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <div className="sectionHeader" style={{ marginTop: 0 }}>
-                  <div className="sectionTitle">Recent Orders</div>
-                  <div className="sectionHint">Status of items you have purchased</div>
+                  <div className="sectionTitle">My Orders</div>
+                  <div className="sectionHint">All your purchases (pending, processed, shipped, delivered)</div>
                 </div>
-                <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>🗂️</div>
-                  <div className="sectionTitle">No information</div>
-                  <div className="sectionHint">There are no orders to show on this page.</div>
+
+                <div className="pageCard" style={{ padding: 12, borderRadius: 18, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--muted)', letterSpacing: 0.6, textTransform: 'uppercase' }}>Filter</div>
+                    <select
+                      className="input"
+                      value={orderStatusFilter}
+                      onChange={(e) => setOrderStatusFilter(e.target.value)}
+                      style={{ padding: '8px 10px', borderRadius: 12, height: 40, minWidth: 200 }}
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processed</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
                 </div>
+
+                {ordersLoading ? (
+                  <div className="pageCard" style={{ padding: 18 }}>Loading...</div>
+                ) : ordersError ? (
+                  <div className="pageCard" style={{ padding: 18, color: 'var(--danger)', fontWeight: 800 }}>{ordersError}</div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>🧾</div>
+                    <div className="sectionTitle">No orders</div>
+                    <div className="sectionHint">Your completed and in-progress orders will appear here.</div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {filteredOrders.map((order) => (
+                      <div key={order.id} className="pageCard" style={{ padding: 16, borderRadius: 20 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase' }}>Order #{order.id}</div>
+                            <div style={{ fontSize: 14, fontWeight: 900 }}>Store: {order.seller_name}</div>
+                          </div>
+                          <div style={{
+                            padding: '6px 12px',
+                            borderRadius: 12,
+                            background: 'rgba(79, 70, 229, 0.08)',
+                            border: '1px solid rgba(79, 70, 229, 0.18)',
+                            fontSize: 12,
+                            fontWeight: 900,
+                            textTransform: 'capitalize',
+                          }}>
+                            {order.status === 'processing' ? 'processed' : order.status}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                          {(order.items || []).map((item) => (
+                            <div key={item.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                              <div style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden', background: 'var(--bg)' }}>
+                                {item.product_image ? (
+                                  <img src={item.product_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                  <div style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>📦</div>
+                                )}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product_title}</div>
+                                <div style={{ fontSize: 11, color: 'var(--muted)' }}>Qty: {item.quantity}</div>
+                              </div>
+                              <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--primary)' }}>{(item.price * item.quantity).toLocaleString()}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: 'var(--muted)' }}>Total</div>
+                            <div style={{ fontSize: 16, fontWeight: 950, color: 'var(--primary)' }}>{Number(order.total_price).toLocaleString()}</div>
+                          </div>
+                          {order.tracking_number ? (
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Tracking</div>
+                              <div style={{ fontSize: 13, fontWeight: 800 }}>{order.tracking_number}</div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

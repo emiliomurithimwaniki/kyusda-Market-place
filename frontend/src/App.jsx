@@ -8,7 +8,10 @@ import Chat from './pages/Chat.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Home from './pages/Home.jsx';
 import Market from './pages/Market.jsx';
+import Cart from './pages/Cart.jsx';
+import OrderTracking from './pages/OrderTracking.jsx';
 import Messages from './pages/Messages.jsx';
+import NewArrivals from './pages/NewArrivals.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
 import EditProduct from './pages/EditProduct.jsx';
 import Profile from './pages/Profile.jsx';
@@ -20,6 +23,7 @@ import VerifyEmail from './pages/VerifyEmail.jsx';
 import TransactionStatus from './pages/TransactionStatus.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import HelpSupport from './pages/HelpSupport.jsx';
+import Notifications from './pages/Notifications.jsx';
 
 export default function App() {
   const location = useLocation();
@@ -58,7 +62,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home query={query} category={category} setCategory={setCategory} />} />
           <Route path="/market" element={<Market query={query} showFilters={showFilters} setShowFilters={setShowFilters} />} />
+          <Route path="/new-arrivals" element={<NewArrivals />} />
           <Route path="/flash" element={<FlashSale />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/orders" element={<OrderTracking />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/product/:id/edit" element={<EditProduct />} />
           <Route path="/add" element={<AddListing />} />

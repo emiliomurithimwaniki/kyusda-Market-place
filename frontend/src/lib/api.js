@@ -70,6 +70,7 @@ export const api = {
 
   getCategories: () => apiClient.get('/api/marketplace/categories/'),
   getProducts: (params) => apiClient.get('/api/marketplace/products/', { params }),
+  getSearchSuggestions: (search, pageSize = 6) => apiClient.get('/api/marketplace/products/', { params: { search, page: 1, page_size: pageSize } }),
   getProduct: (id) => apiClient.get(`/api/marketplace/products/${id}/`),
   updateProduct: (id, payload) => apiClient.patch(`/api/marketplace/products/${id}/edit/`, payload),
   deleteProduct: (id) => apiClient.delete(`/api/marketplace/products/${id}/delete/`),
@@ -83,4 +84,15 @@ export const api = {
   getMessages: (convId) => apiClient.get(`/api/chat/conversations/${convId}/messages/`),
   sendMessage: (convId, payload) => apiClient.post(`/api/chat/conversations/${convId}/messages/`, payload),
   getUnreadCount: () => apiClient.get('/api/chat/unread-count/'),
+
+  // Orders & Cart
+  createOrders: (payload) => apiClient.post('/api/marketplace/orders/', payload),
+  getOrders: () => apiClient.get('/api/marketplace/orders/'),
+  getOrder: (id) => apiClient.get(`/api/marketplace/orders/${id}/`),
+  updateOrderStatus: (id, payload) => apiClient.patch(`/api/marketplace/orders/${id}/`, payload),
+
+  // Notifications
+  getNotifications: () => apiClient.get('/api/notifications/'),
+  getNotificationsUnreadCount: () => apiClient.get('/api/notifications/unread-count/'),
+  markNotificationRead: (id) => apiClient.post(`/api/notifications/${id}/read/`),
 };

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.conf import settings
 from .models import Conversation, Message
 from accounts.models import User
+from marketplace.models import Product
 
 class UserChatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,10 +13,31 @@ class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.name', read_only=True)
     is_mine = serializers.SerializerMethodField()
     conversation = serializers.PrimaryKeyRelatedField(read_only=True)
+    product_id = serializers.IntegerField(source='product.id', read_only=True)
+    product_title = serializers.CharField(source='product.title', read_only=True)
+    product_price = serializers.DecimalField(source='product.price', max_digits=12, decimal_places=2, read_only=True)
+    product_image = serializers.CharField(source='product.image', read_only=True)
+    product_image_url = serializers.CharField(source='product.image', read_only=True)
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Message
-        fields = ['id', 'conversation', 'sender', 'sender_name', 'body', 'is_read', 'created_at', 'is_mine']
+        fields = [
+            'id',
+            'conversation',
+            'sender',
+            'sender_name',
+            'body',
+            'product',
+            'product_id',
+            'product_title',
+            'product_price',
+            'product_image',
+            'product_image_url',
+            'is_read',
+            'created_at',
+            'is_mine'
+        ]
         read_only_fields = ['sender', 'conversation']
 
     def get_is_mine(self, obj):

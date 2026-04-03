@@ -1,7 +1,12 @@
-import { NavLink } from 'react-router-dom';
-import { IconBag, IconChat, IconHome, IconPlus, IconUser } from './Icons.jsx';
+import { NavLink, Link, useLocation } from 'react-router-dom';
+import { IconBag, IconChat, IconHome, IconPlus, IconUser, IconCart } from './Icons.jsx';
+import { useCart } from '../context/CartContext';
 
 export default function BottomNav() {
+  const location = useLocation();
+  const { cartItems, cartCount } = useCart();
+  const active = location.pathname;
+
   return (
     <nav className="bottomNav" aria-label="Bottom navigation">
       <div className="navRow">
@@ -18,25 +23,44 @@ export default function BottomNav() {
           <span>Market</span>
         </NavLink>
 
-        <NavLink to="/add" className={({ isActive }) => `navItem ${isActive ? 'navItemActive' : ''}`}
-        >
-          <div className="fab" aria-hidden="true">
+        <Link to="/add" className="navItem centerAction">
+          <div className="centerBtn">
             <IconPlus />
           </div>
-          <span style={{ marginTop: -10 }}>Add</span>
-        </NavLink>
+        </Link>
 
-        <NavLink to="/messages" className={({ isActive }) => `navItem ${isActive ? 'navItemActive' : ''}`}
-        >
-          <IconChat />
-          <span>Messages</span>
-        </NavLink>
+        <Link to="/cart" className={`navItem ${active === '/cart' ? 'navItemActive' : ''}`}>
+          <div style={{ position: 'relative' }}>
+            <IconCart />
+            {cartCount > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: -8,
+                right: -8,
+                background: 'var(--danger)',
+                color: 'white',
+                fontSize: 10,
+                fontWeight: 900,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 4px',
+                border: '2px solid white'
+              }}>
+                {cartCount}
+              </div>
+            )}
+          </div>
+          <span>Cart</span>
+        </Link>
 
-        <NavLink to="/profile" className={({ isActive }) => `navItem ${isActive ? 'navItemActive' : ''}`}
-        >
+        <Link to="/profile" className={`navItem ${active === '/profile' ? 'navItemActive' : ''}`}>
           <IconUser />
           <span>Profile</span>
-        </NavLink>
+        </Link>
       </div>
     </nav>
   );

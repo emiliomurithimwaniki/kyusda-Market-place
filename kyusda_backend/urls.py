@@ -18,12 +18,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('accounts.urls')),
     path('api/marketplace/', include('marketplace.urls')),
     path('api/chat/', include('chat.urls')),
+    path('api/notifications/', include('notifications.urls')),
+    path('', TemplateView.as_view(template_name='index.html'), name='spa-index'),
+    path('<path:path>', TemplateView.as_view(template_name='index.html'), name='spa-fallback'),
 ]
 
 if settings.DEBUG:

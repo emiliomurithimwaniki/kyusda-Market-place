@@ -4,12 +4,15 @@ import { formatKES } from '../lib/format.js';
 import ProductCard from '../components/ProductCard.jsx';
 import ProductDetailsSkeleton from '../components/skeletons/ProductDetailsSkeleton.jsx';
 import { api } from '../lib/api.js';
+import { useCart } from '../context/CartContext.jsx';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState('description');
   const [activePhoto, setActivePhoto] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const [product, setProduct] = useState(null);
   const [sellerProducts, setSellerProducts] = useState([]);
@@ -92,6 +95,25 @@ export default function ProductDetails() {
             const list = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
             const next = [p, ...list.filter((x) => String(x?.id) !== String(p.id))].slice(0, 8);
             window.localStorage.setItem(key, JSON.stringify(next));
+
+            const viewsKey = 'kyusda_product_views';
+            const viewsRaw = window.localStorage.getItem(viewsKey);
+            const viewsObj = viewsRaw ? JSON.parse(viewsRaw) : {};
+            const pid = String(p.id);
+            const cur = Number(viewsObj?.[pid] || 0);
+            const nextViews = { ...(viewsObj || {}), [pid]: cur + 1 };
+            window.localStorage.setItem(viewsKey, JSON.stringify(nextViews));
+
+            const catName = String(p?.category || p?.category_name || '').trim();
+            if (catName) {
+              const catViewsKey = 'kyusda_category_views';
+              const catViewsRaw = window.localStorage.getItem(catViewsKey);
+              const catViewsObj = catViewsRaw ? JSON.parse(catViewsRaw) : {};
+              const ck = catName.toLowerCase();
+              const ccur = Number(catViewsObj?.[ck] || 0);
+              const nextCatViews = { ...(catViewsObj || {}), [ck]: ccur + 1 };
+              window.localStorage.setItem(catViewsKey, JSON.stringify(nextCatViews));
+            }
           }
         } catch {}
 
@@ -140,6 +162,25 @@ export default function ProductDetails() {
     setActivePhoto(0);
   }, [product?.id]);
 
+  useEffect(() => {
+    if (!viewerOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setViewerOpen(false);
+        return;
+      }
+      if (images.length <= 1) return;
+      if (e.key === 'ArrowLeft') {
+        setActivePhoto((p) => (p - 1 + images.length) % images.length);
+      }
+      if (e.key === 'ArrowRight') {
+        setActivePhoto((p) => (p + 1) % images.length);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [viewerOpen, images.length]);
+
   return (
     <div style={{ animation: 'fadeIn 0.5s ease' }}>
       {loading ? (
@@ -158,6 +199,98 @@ export default function ProductDetails() {
         </div>
       ) : (
         <div>
+          {viewerOpen && images.length > 0 ? (
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setViewerOpen(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(17,24,39,0.78)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 16,
+              }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'relative',
+                  width: 'min(980px, 100%)',
+                  height: 'min(80vh, 720px)',
+                  borderRadius: 18,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+                  background: 'rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <img
+                  src={images[activePhoto]}
+                  alt={`${product.title} ${activePhoto + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                />
+
+                <button
+                  type="button"
+                  className="iconBtn"
+                  onClick={() => setViewerOpen(false)}
+                  style={{ position: 'absolute', top: 12, right: 12, width: 38, height: 38, borderRadius: 14, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(255,255,255,0.55)' }}
+                  aria-label="Close viewer"
+                >
+                  ✕
+                </button>
+
+                {images.length > 1 ? (
+                  <>
+                    <button
+                      type="button"
+                      className="iconBtn"
+                      onClick={() => setActivePhoto((p) => (p - 1 + images.length) % images.length)}
+                      style={{ position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: 16, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(255,255,255,0.55)' }}
+                      aria-label="Previous photo"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      className="iconBtn"
+                      onClick={() => setActivePhoto((p) => (p + 1) % images.length)}
+                      style={{ position: 'absolute', top: '50%', right: 12, transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: 16, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(255,255,255,0.55)' }}
+                      aria-label="Next photo"
+                    >
+                      ›
+                    </button>
+
+                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 12, display: 'flex', justifyContent: 'center', gap: 6 }}>
+                      {images.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setActivePhoto(idx)}
+                          style={{
+                            width: idx === activePhoto ? 18 : 8,
+                            height: 8,
+                            borderRadius: 999,
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: idx === activePhoto ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
+                            transition: 'all 160ms ease',
+                          }}
+                          aria-label={`Go to photo ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <div className="sectionHeader" style={{ marginTop: 0 }}>
             <div>
               <div className="sectionTitle">{product.title}</div>
@@ -189,6 +322,10 @@ export default function ProductDetails() {
                       <img
                         src={src}
                         alt={`${product.title} ${idx + 1}`}
+                        onClick={() => {
+                          setActivePhoto(idx);
+                          setViewerOpen(true);
+                        }}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                         loading="lazy"
                       />
@@ -242,6 +379,11 @@ export default function ProductDetails() {
           ) : null}
 
           <div className="pageCard" style={{ padding: 24 }}>
+            {Number(product?.stock) <= 0 ? (
+              <div className="badge" style={{ marginBottom: 12, padding: '6px 12px', fontSize: 12, background: 'rgba(239, 68, 68, 0.08)', borderColor: 'rgba(239, 68, 68, 0.25)', color: 'var(--danger)', fontWeight: 900, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span>Out of stock</span>
+              </div>
+            ) : null}
             {isOfferValid ? (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
@@ -285,7 +427,29 @@ export default function ProductDetails() {
                 {activeTab === 'description' ? (
                   <>
                     <p style={{ lineHeight: 1.6, color: 'var(--text)', opacity: 0.85 }}>{product.description}</p>
-                    <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+                      <button 
+                        className="btn btnPrimary" 
+                        style={{ flex: 1, height: 54, borderRadius: 16, fontSize: 16, fontWeight: 900 }}
+                        onClick={() => {
+                          addToCart(product);
+                        }}
+                        disabled={Number(product?.stock) <= 0}
+                      >
+                        Buy Now
+                      </button>
+                      <button 
+                        className="btn btnGhost" 
+                        style={{ flex: 1, height: 54, borderRadius: 16, border: '2px solid var(--primary)', color: 'var(--primary)', fontSize: 16, fontWeight: 900 }}
+                        onClick={() => {
+                          addToCart(product);
+                        }}
+                        disabled={Number(product?.stock) <= 0}
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
                       <button className="btn btnPrimary" style={{ flex: 1, height: 48 }} onClick={handleContactSeller}>
                         Contact Seller
                       </button>

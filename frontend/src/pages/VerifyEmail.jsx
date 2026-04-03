@@ -69,9 +69,10 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     if (redirectIn === 0) {
-      nav('/');
+      const redirect = params.get('next') || params.get('redirect') || '/';
+      nav(redirect);
     }
-  }, [redirectIn, nav]);
+  }, [redirectIn, nav, params]);
 
   function onCodeChange(v) {
     const digits = (v || '').replace(/\D/g, '').slice(0, 6);

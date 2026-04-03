@@ -4,6 +4,7 @@ from django.db.models import Q
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer, UserChatSerializer
 from accounts.models import User
+from marketplace.models import Product
 
 class ConversationListView(generics.ListAPIView):
     serializer_class = ConversationSerializer
@@ -26,6 +27,9 @@ class MessageListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         conversation_id = self.kwargs.get('conversation_id')
         conversation = Conversation.objects.get(id=conversation_id, participants=self.request.user)
+        product = serializer.validated_data.get('product') if hasattr(serializer, 'validated_data') else None
+        if product is not None:
+            Product.objects.filter(id=product.id).exists()
         serializer.save(sender=self.request.user, conversation=conversation)
 
 class GetOrCreateConversationView(generics.GenericAPIView):

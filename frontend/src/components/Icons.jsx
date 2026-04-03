@@ -49,3 +49,12 @@ export function IconSearch(props) {
     </svg>
   );
 }
+
+export function IconCart(props) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" {...props}>
+      <path d="M3 3h2l.4 2M5.4 5L7 16h10l1.6-11H5.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2ZM15 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" fill="currentColor" />
+    </svg>
+  );
+}

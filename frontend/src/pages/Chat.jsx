@@ -71,8 +71,12 @@ export default function Chat() {
         ) {
           preMessageSentRef.current = true;
           try {
-            const preBody = `Hello ${sellerName || 'there'}! 👋 I'm interested in this item. Is it still available?`;
-            const sendRes = await api.sendMessage(convRes.data.id, { body: preBody });
+            const productTitle = String(prod?.title || '').trim();
+            const preBody = `Hello im interested in this product ${productTitle || ''}`.trim();
+            const sendRes = await api.sendMessage(convRes.data.id, {
+              body: preBody,
+              product: Number(productId),
+            });
             if (mounted) setMessages((m) => [...m, sendRes.data]);
           } catch (err) {
             preMessageSentRef.current = false;
@@ -93,7 +97,9 @@ export default function Chat() {
     if (!body || isSending || !conversation?.id) return;
     setIsSending(true);
     try {
-      const res = await api.sendMessage(conversation.id, { body });
+      const payload = { body };
+      if (product?.id) payload.product = Number(product.id);
+      const res = await api.sendMessage(conversation.id, payload);
       setMessages((m) => [...m, res.data]);
       setText('');
     } catch (err) {
@@ -164,29 +170,63 @@ export default function Chat() {
           </div>
         )}
         
-        {messages.map((m) => (
-          <div 
-            key={m.id} 
-            style={{ 
-              alignSelf: m.is_mine ? 'flex-end' : 'flex-start',
-              maxWidth: '80%',
-              padding: '12px 16px',
-              borderRadius: m.is_mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-              background: m.is_mine ? 'var(--primary)' : 'white',
-              color: m.is_mine ? 'white' : 'var(--text)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              border: m.is_mine ? 'none' : '1px solid var(--border)',
-              fontSize: 14,
-              fontWeight: 500,
-              lineHeight: 1.5
-            }}
-          >
-            {m.body}
-            <div style={{ fontSize: 9, marginTop: 4, textAlign: 'right', opacity: 0.7 }}>
-              {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {messages.map((m) => {
+          const msgProductImage = m.product_image_url || m.product_image || '';
+          const hasProduct = Boolean(m.product_id || m.product) && (m.product_title || m.product_price || msgProductImage);
+
+          return (
+            <div 
+              key={m.id} 
+              style={{ 
+                alignSelf: m.is_mine ? 'flex-end' : 'flex-start',
+                maxWidth: '80%',
+                padding: '12px 16px',
+                borderRadius: m.is_mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                background: m.is_mine ? 'var(--primary)' : 'white',
+                color: m.is_mine ? 'white' : 'var(--text)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                border: m.is_mine ? 'none' : '1px solid var(--border)',
+                fontSize: 14,
+                fontWeight: 500,
+                lineHeight: 1.5
+              }}
+            >
+              {hasProduct ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center',
+                    padding: 10,
+                    borderRadius: 14,
+                    background: m.is_mine ? 'rgba(255,255,255,0.14)' : 'rgba(17,24,39,0.04)',
+                    border: m.is_mine ? '1px solid rgba(255,255,255,0.22)' : '1px solid var(--border)',
+                    marginBottom: 10,
+                  }}
+                >
+                  <div style={{ width: 54, height: 54, borderRadius: 12, overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(0,0,0,0.06)' }}>
+                    {msgProductImage ? (
+                      <img src={msgProductImage} alt={m.product_title || 'Product'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : null}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 900, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {m.product_title || 'Product'}
+                    </div>
+                    <div style={{ fontWeight: 800, opacity: 0.9, marginTop: 2 }}>
+                      {m.product_price ? `KSh ${Number(m.product_price).toLocaleString()}` : ''}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {m.body}
+              <div style={{ fontSize: 9, marginTop: 4, textAlign: 'right', opacity: 0.7 }}>
+                {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         
         {messages.length === 0 && !product && !loading ? (
           <div className="pageCard" style={{ textAlign: 'center', padding: '60px 20px' }}>

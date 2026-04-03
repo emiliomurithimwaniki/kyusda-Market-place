@@ -16,6 +16,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_sent_messages')
     body = models.TextField()
+    product = models.ForeignKey('marketplace.Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_messages')
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

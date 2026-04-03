@@ -18,7 +18,7 @@ export default function AddListing() {
     location: 'Juja',
     locationDetail: '',
     description: '',
-    category: '',
+    categories: [],
     quantity: '1',
     deliveryType: 'pickup',
     paymentMethod: 'mpesa',
@@ -141,7 +141,7 @@ export default function AddListing() {
         title: formData.title,
         price: formData.price,
         description: formData.description,
-        category: formData.category,
+        categories: formData.categories,
         location: `${formData.location}${formData.locationDetail ? ', ' + formData.locationDetail : ''}`,
         image_url: formData.imageUrls[0],
         isBoosted: formData.isBoosted
@@ -308,14 +308,17 @@ export default function AddListing() {
 
         <div className="field">
           <div className="label">Category</div>
-          <select 
+          <select
             className="input"
-            value={formData.category}
-            onChange={(e) => setFormData({...formData, category: e.target.value})}
+            multiple
+            value={formData.categories.map(String)}
+            onChange={(e) => {
+              const values = Array.from(e.target.selectedOptions).map((o) => Number(o.value));
+              setFormData({ ...formData, categories: values });
+            }}
           >
-            <option value="">No category</option>
             {loadingCats ? null : catsError ? null : categories.map((c) => (
-              <option key={c.id} value={c.name}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
           {loadingCats ? null : catsError ? (
@@ -323,6 +326,7 @@ export default function AddListing() {
           ) : categories.length === 0 ? (
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>No information</div>
           ) : null}
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>You can select more than one category.</div>
         </div>
 
         {/* Delivery & Payment */}

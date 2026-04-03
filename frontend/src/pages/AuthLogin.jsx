@@ -19,7 +19,7 @@ export default function AuthLogin() {
       
       // Handle redirect
       const params = new URLSearchParams(location.search);
-      const redirect = params.get('redirect') || '/';
+      const redirect = params.get('next') || params.get('redirect') || '/';
       nav(redirect);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Login failed');

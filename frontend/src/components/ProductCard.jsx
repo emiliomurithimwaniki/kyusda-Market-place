@@ -50,87 +50,60 @@ export default function ProductCard({ product, showOffer = false }) {
   };
 
   return (
-    <div 
-      className="card" 
+    <div
+      className="card"
       onClick={handleClick}
-      style={{ 
-        border: '1px solid rgba(0,0,0,0.06)', 
-        boxShadow: '0 10px 30px rgba(17, 24, 39, 0.08)', 
-        borderRadius: 18, 
-        overflow: 'hidden', 
-        background: 'rgba(255,255,255,0.95)',
+      style={{
+        border: '1px solid rgba(0,0,0,0.04)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+        borderRadius: 24,
+        overflow: 'hidden',
+        background: '#fff',
         cursor: 'pointer',
-        transition: 'transform 0.2s ease'
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
     >
-      <div className="cardImg" style={{ borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: 'hidden' }}>
-        <div className="imgOverlay"></div>
-        {product?.featured ? (
-          <div
-            className="badge"
-            style={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              zIndex: 1,
-              background: '#16a34a',
-              borderColor: '#16a34a',
-              color: 'white',
-              fontWeight: 900,
-            }}
-          >
-            Featured
-          </div>
-        ) : null}
-        {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt={product?.title || 'Product'}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.02)' }}
-            loading="lazy"
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.8 }}>
-            <div style={{ fontSize: 32 }}>📦</div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>Preview</div>
-          </div>
+      <div className="cardImg" style={{ height: 180, position: 'relative', overflow: 'hidden' }}>
+        {product?.featured && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12, zIndex: 2,
+            background: 'rgba(22, 163, 74, 0.9)', backdropFilter: 'blur(4px)',
+            color: 'white', fontSize: 10, fontWeight: 900, padding: '4px 10px',
+            borderRadius: 8, letterSpacing: 0.5, textTransform: 'uppercase'
+          }}>Featured</div>
         )}
-      </div>
-      <div className="cardBody" style={{ padding: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-          <div className="cardTitle" style={{ fontSize: 15 }}>{product?.title || 'Untitled'}</div>
-        </div>
-        
-        <div className="cardMeta" style={{ margin: '4px 0 12px' }}>
-          {isOfferValid ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--danger)', textDecoration: 'line-through' }}>
-                {formatKES(product?.price || 0)}
-              </div>
-              <div className="price" style={{ fontSize: 16, color: 'var(--primary)' }}>
-                {formatKES(product?.offer_price || 0)}
-              </div>
-              {showOffer && (
-                <div className="badge" style={{ padding: '4px 8px', fontSize: 10, borderColor: 'rgba(239, 68, 68, 0.25)', background: 'rgba(239, 68, 68, 0.08)' }}>
-                  Offer ends in {parts.hh}:{parts.mm}:{parts.ss}
-                </div>
-              )}
-            </div>
+        <div style={{ width: '100%', height: '100%', background: 'var(--bg)' }}>
+          {imgSrc ? (
+            <img src={imgSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            <div className="price" style={{ fontSize: 16, color: 'var(--primary)' }}>{formatKES(product?.price || 0)}</div>
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>📦</div>
           )}
-          {product?.seller ? (
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>by {product.seller}</div>
-          ) : null}
         </div>
-
-        <div className="btnRow">
-          <Link className="btn btnPrimary" style={{ flex: 1, padding: '8px 0' }} to={`/product/${product?.id}`}>View Details</Link>
-          <Link className="btn btnGhost" style={{ padding: '8px 12px' }} to={`/messages?to=${product?.sellerId}`}>
-            <span style={{ fontSize: 16 }}>💬</span>
-          </Link>
+      </div>
+      <div className="cardBody" style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="cardTitle" style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+          {product?.title || 'Untitled'}
+        </div>
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--primary)' }}>
+              {formatKES(isOfferValid ? product?.offer_price : product?.price)}
+            </span>
+            {isOfferValid && (
+              <span style={{ fontSize: 11, color: 'var(--muted)', textDecoration: 'line-through' }}>
+                {formatKES(product?.price)}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>by {product?.seller || 'Unknown'}</div>
+            <button className="btn btnGhost" style={{ padding: '6px 10px', borderRadius: 10, height: 32 }}>
+              <span>💬</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

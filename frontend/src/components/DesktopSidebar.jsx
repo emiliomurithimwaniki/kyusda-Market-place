@@ -1,16 +1,26 @@
 import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { IconBag, IconChat, IconHome, IconPlus, IconUser } from './Icons.jsx';
-
-const SIDEBAR_CATEGORIES = [
-  { name: 'All Items', icon: '🛍️', path: '/market' },
-  { name: 'Phones & Tech', icon: '📱', path: '/market?cat=Phones' },
-  { name: 'Fashion', icon: '👕', path: '/market?cat=Fashion' },
-  { name: 'Food & Drinks', icon: '🍱', path: '/market?cat=Food' },
-  { name: 'Hostels', icon: '🏠', path: '/market?cat=Hostels' },
-  { name: 'Books', icon: '📚', path: '/market?cat=Books' },
-];
+import { api } from '../lib/api.js';
 
 export default function DesktopSidebar() {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.getCategories();
+        if (mounted) setCategories(res?.data || []);
+      } catch {
+        if (mounted) setCategories([]);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <aside className="desktopSidebar">
       <div className="sidebarCard">
@@ -36,9 +46,18 @@ export default function DesktopSidebar() {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {SIDEBAR_CATEGORIES.map(cat => (
-            <Link key={cat.name} to={cat.path} className="btn btnGhost" style={{ justifyContent: 'flex-start', gap: 12, fontSize: 13 }}>
-              <span>{cat.icon}</span> {cat.name}
+          <Link to="/market" className="btn btnGhost" style={{ justifyContent: 'flex-start', gap: 12, fontSize: 13 }}>
+            <span>🛍️</span> All Items
+          </Link>
+
+          {categories.map((cat) => (
+            <Link key={cat.id} to={`/market?cat=${encodeURIComponent(cat.name)}`} className="btn btnGhost" style={{ justifyContent: 'flex-start', gap: 12, fontSize: 13 }}>
+              {cat.image ? (
+                <img src={cat.image} alt={cat.name} style={{ width: 20, height: 20, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} />
+              ) : (
+                <span style={{ width: 20, textAlign: 'center' }}>🏷️</span>
+              )}
+              {cat.name}
             </Link>
           ))}
         </div>
